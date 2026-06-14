@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作列群組管理器 - 快速上手指南</title>
+    <style>
+        /* ==========================================
+           1. 全局變數與基礎樣式設定
+           ========================================== */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+
+        :root {
+            --primary: #007acc;
+            --primary-hover: #005999;
+            --primary-light: rgba(0, 122, 204, 0.1);
+            --bg-dark: #121212;
+            --bg-card: #1e1e1e;
+            --text-main: #f0f0f0;
+            --text-muted: #aaaaaa;
+            --border: #2d2d2d;
+            --success: #2ea44f;
+            --success-hover: #227d3b;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        /* ==========================================
+           2. 容器與排版佈局
+           ========================================== */
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo-area {
+            display: inline-block;
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, #00c6ff, #007acc);
+            border-radius: 18px;
+            margin-bottom: 15px;
+            box-shadow: 0 8px 20px rgba(0, 122, 204, 0.3);
+            position: relative;
+        }
+
+        .logo-area::before {
+            content: "";
+            position: absolute;
+            top: 18px;
+            left: 18px;
+            width: 36px;
+            height: 36px;
+            border: 4px solid white;
+            border-radius: 6px;
+        }
+
+        h1 {
+            font-size: 24pt;
+            font-weight: 700;
+            margin: 10px 0 5px 0;
+            background: linear-gradient(to right, #ffffff, #88d0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 11pt;
+            color: var(--text-muted);
+            margin-top: 0;
+        }
+
+        /* ==========================================
+           3. 下載按鈕區塊
+           ========================================== */
+        .download-box {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 35px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .download-box:hover {
+            transform: translateY(-2px);
+            border-color: #444444;
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--success), #22863a);
+            color: white;
+            text-decoration: none;
+            padding: 14px 32px;
+            font-size: 12pt;
+            font-weight: 700;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            box-shadow: 0 6px 15px rgba(46, 164, 79, 0.3);
+            border: none;
+            cursor: pointer;
+        }
+
+        .download-btn:hover {
+            background: linear-gradient(135deg, var(--success-hover), #1c6d2e);
+            transform: scale(1.03);
+            box-shadow: 0 8px 20px rgba(46, 164, 79, 0.4);
+        }
+
+        .download-btn span {
+            margin-right: 8px;
+            font-size: 14pt;
+        }
+
+        .file-info {
+            font-size: 9pt;
+            color: var(--text-muted);
+            margin-top: 10px;
+        }
+
+        /* ==========================================
+           4. 快速上手步驟 (卡片設計)
+           ========================================== */
+        .section-title {
+            font-size: 14pt;
+            font-weight: 700;
+            margin: 30px 0 20px 0;
+            border-left: 4px solid var(--primary);
+            padding-left: 12px;
+        }
+
+        .step-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            transition: all 0.2s ease;
+        }
+
+        .step-card:hover {
+            border-color: #007acc;
+            box-shadow: 0 5px 15px rgba(0, 122, 204, 0.1);
+        }
+
+        .step-badge {
+            background-color: var(--primary);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 10pt;
+            margin-right: 15px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(0, 122, 204, 0.3);
+        }
+
+        .step-body {
+            flex-grow: 1;
+        }
+
+        .step-header {
+            font-size: 11.5pt;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #ffffff;
+        }
+
+        .step-desc {
+            font-size: 10pt;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        .step-desc ul {
+            margin: 8px 0 0 0;
+            padding-left: 20px;
+        }
+
+        .step-desc li {
+            margin-bottom: 4px;
+        }
+
+        /* ==========================================
+           5. 提示與防呆警告框
+           ========================================== */
+        .alert-box {
+            background-color: rgba(221, 107, 32, 0.1);
+            border: 1px solid rgba(221, 107, 32, 0.3);
+            border-left: 4px solid #dd6b20;
+            border-radius: 10px;
+            padding: 15px 20px;
+            margin-top: 30px;
+        }
+
+        .alert-title {
+            font-weight: 700;
+            color: #dd6b20;
+            margin-bottom: 5px;
+            font-size: 10.5pt;
+        }
+
+        .alert-content {
+            font-size: 9.5pt;
+            color: #d69e2e;
+            margin: 0;
+        }
+
+        /* ==========================================
+           6. 頁尾
+           ========================================== */
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 9pt;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+        }
+
+        code {
+            font-family: Consolas, monospace;
+            background-color: #2b2b2b;
+            color: #ff7b72;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 9.5pt;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 頁首標題 -->
+        <header>
+            <div class="logo-area"></div>
+            <h1>工作列群組管理器</h1>
+            <p class="subtitle">將多個常用的應用程式、PWA 網頁打包為單一工作列圖示，告別擁擠的工作列！</p>
+        </header>
+
+        <!-- 下載區塊 -->
+        <div class="download-box">
+            <h3 style="margin-top:0; margin-bottom: 12px; font-size: 13pt;">📥 取得最新版本</h3>
+            <p style="font-size: 10.5pt; color: var(--text-muted); margin-top:0; margin-bottom: 20px;">
+                綠色免安裝版，點擊即可下載。
+            </p>
+            <a href="./TaskbarGroups.exe" class="download-btn" download>
+                <span>📥</span> 下載 TaskbarGroups.exe
+            </a>
+            <div class="file-info">Windows 10 / 11 適用 | 免費且開源 (約 24 KB)</div>
+        </div>
+
+        <!-- 使用步驟 -->
+        <div class="section-title">⚡ 快速上手 3 步驟</div>
+
+        <!-- 步驟 1 -->
+        <div class="step-card">
+            <div class="step-badge">1</div>
+            <div class="step-body">
+                <div class="step-header">雙擊執行與建立群組</div>
+                <p class="step-desc">
+                    雙擊執行下載的 <code>TaskbarGroups.exe</code> 進入管理器。
+                    <ul>
+                        <li>點擊左下角 **「新增群組」**，命名您的群組（如：工作、遊戲）。</li>
+                        <li>選取群組後，在右側點擊 **「新增應用程式」** 加入您想要的程式。</li>
+                        <li>**提示：** 如果想加入已安裝的 PWA 網頁（如 Notion），請將檔案類型切換為「所有檔案 (*.*)」，並到 <code>%APPDATA%\Microsoft\Windows\Start Menu\Programs\Chrome 應用程式</code> 選擇該捷徑。</li>
+                    </ul>
+                </p>
+            </div>
+        </div>
+
+        <!-- 步驟 2 -->
+        <div class="step-card">
+            <div class="step-badge">2</div>
+            <div class="step-body">
+                <div class="step-header">設定圖示並儲存</div>
+                <p class="step-desc">
+                    為您的群組打造好看的外觀，並寫入設定。
+                    <ul>
+                        <li>點擊右側的 **「選擇圖示」**，可以為群組設定專屬的圖示檔案。</li>
+                        <li>點擊右下角藍色的 **「儲存並產生工作列捷徑」** 按鈕。</li>
+                        <li>儲存成功後，程式會自動為您彈出開啟 <code>shortcuts</code> 捷徑資料夾。</li>
+                    </ul>
+                </p>
+            </div>
+        </div>
+
+        <!-- 步驟 3 -->
+        <div class="step-card">
+            <div class="step-badge">3</div>
+            <div class="step-body">
+                <div class="step-header">釘選至工作列</div>
+                <p class="step-desc">
+                    Windows 不允許直接拖曳捷徑釘選，請按照以下步驟：
+                    <ul>
+                        <li>在彈出的 <code>shortcuts</code> 資料夾中，找到您建立的捷徑檔（如：<code>工作.lnk</code>）。</li>
+                        <li>對捷徑點擊 **「滑鼠右鍵」** &rarr; 選擇 **「釘選到工作列」**。</li>
+                        <li>現在，直接點選工作列上的群組圖示，即可彈出精美浮動選單！</li>
+                    </ul>
+                </p>
+            </div>
+        </div>
+
+        <!-- 注意事項 -->
+        <div class="alert-box">
+            <div class="alert-title">⚠️ 第一次執行的防護提示：</div>
+            <p class="alert-content">
+                本工具為自製綠色開源程式，未購買微軟數位簽章。朋友第一次點開時，若 Windows 彈出「Windows 已保護您的電腦」藍色警告，請提醒他們點擊 **「其他資訊」** &rarr; **「仍要執行」** 即可正常使用，請放心執行！
+            </p>
+        </div>
+
+        <!-- 頁尾 -->
+        <footer>
+            <p>工作列群組管理器 - 精簡快速版說明頁 | 2026 年</p>
+        </footer>
+    </div>
+
+</body>
+</html>
