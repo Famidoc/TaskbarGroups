@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>自訂工作列群組管理器 - 詳細使用手冊與技術指南</title>
+    <style>
+        /* ==========================================================================
+           1. 全局樣式與字型設定
+           ========================================================================== */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 11pt;
+            line-height: 1.65;
+            color: #2c3e50;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ==========================================================================
+           2. PDF 列印專用分頁與版面設定
+           ========================================================================== */
+        @page {
+            size: A4;
+            margin: 2.5cm 2cm 2.5cm 2cm;
+        }
+
+        /* 強制分頁與避免元素斷開 */
+        .page-break {
+            page-break-before: always;
+        }
+        
+        .no-break {
+            page-break-inside: avoid;
+        }
+
+        h1, h2, h3 {
+            page-break-after: avoid;
+            color: #1a365d;
+        }
+
+        /* ==========================================================================
+           3. 封面樣式
+           ========================================================================== */
+        .cover-page {
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 3cm 1cm 2cm 1cm;
+            page-break-after: always;
+            border-left: 8px solid #007acc;
+            background: linear-gradient(135deg, #ffffff 60%, #f4f7f6 100%);
+        }
+
+        .cover-header {
+            margin-top: 2cm;
+        }
+
+        .cover-title {
+            font-size: 32pt;
+            font-weight: 700;
+            line-height: 1.2;
+            color: #1a365d;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .cover-subtitle {
+            font-size: 16pt;
+            font-weight: 300;
+            color: #4a5568;
+            margin-top: 0;
+            border-bottom: 2px solid #007acc;
+            padding-bottom: 20px;
+            width: 80%;
+        }
+
+        .cover-metadata {
+            margin-bottom: 2cm;
+            font-size: 11pt;
+            color: #718096;
+        }
+
+        .metadata-item {
+            margin: 8px 0;
+        }
+
+        .metadata-label {
+            font-weight: 500;
+            color: #4a5568;
+            display: inline-block;
+            width: 80px;
+        }
+
+        /* ==========================================================================
+           4. 目錄與內容排版樣式
+           ========================================================================== */
+        .toc-title {
+            font-size: 20pt;
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: #1a365d;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+
+        .toc-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .toc-item {
+            margin-bottom: 12px;
+        }
+
+        .toc-link {
+            display: flex;
+            justify-content: space-between;
+            text-decoration: none;
+            color: #2d3748;
+            font-weight: 500;
+        }
+
+        .toc-link::after {
+            content: " ";
+            flex-grow: 1;
+            border-bottom: 1px dotted #cbd5e0;
+            margin: 0 10px;
+            position: relative;
+            top: -5px;
+        }
+
+        .toc-page {
+            color: #718096;
+            font-weight: normal;
+        }
+
+        .toc-sublist {
+            list-style-type: none;
+            padding-left: 20px;
+            margin-top: 6px;
+        }
+
+        .toc-subitem {
+            margin-bottom: 8px;
+            font-size: 10pt;
+        }
+
+        .toc-sublink {
+            display: flex;
+            justify-content: space-between;
+            text-decoration: none;
+            color: #4a5568;
+        }
+
+        .toc-sublink::after {
+            content: " ";
+            flex-grow: 1;
+            border-bottom: 1px dotted #e2e8f0;
+            margin: 0 10px;
+            position: relative;
+            top: -5px;
+        }
+
+        /* ==========================================================================
+           5. 正文標題與段落
+           ========================================================================== */
+        .content-container {
+            padding: 0 10px;
+        }
+
+        h1 {
+            font-size: 18pt;
+            border-bottom: 2px solid #2b6cb0;
+            padding-bottom: 8px;
+            margin-top: 1.5cm;
+            margin-bottom: 20px;
+        }
+
+        h1.first-h1 {
+            margin-top: 0;
+        }
+
+        h2 {
+            font-size: 13pt;
+            color: #2b6cb0;
+            margin-top: 1cm;
+            margin-bottom: 12px;
+            border-left: 4px solid #3182ce;
+            padding-left: 10px;
+        }
+
+        h3 {
+            font-size: 11pt;
+            color: #2d3748;
+            margin-top: 0.8cm;
+            margin-bottom: 8px;
+        }
+
+        p {
+            margin-top: 0;
+            margin-bottom: 16px;
+            text-align: justify;
+        }
+
+        /* ==========================================================================
+           6. 提示框 (Callouts / Alerts)
+           ========================================================================== */
+        .alert-box {
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 6px;
+            font-size: 10pt;
+            line-height: 1.5;
+            page-break-inside: avoid;
+        }
+
+        .alert-info {
+            background-color: #ebf8ff;
+            border-left: 5px solid #3182ce;
+            color: #2b6cb0;
+        }
+
+        .alert-warning {
+            background-color: #fffaf0;
+            border-left: 5px solid #dd6b20;
+            color: #dd6b20;
+        }
+
+        .alert-success {
+            background-color: #f0fff4;
+            border-left: 5px solid #38a169;
+            color: #38a169;
+        }
+
+        .alert-title {
+            font-weight: 700;
+            margin-bottom: 5px;
+            font-size: 10.5pt;
+        }
+
+        /* ==========================================================================
+           7. 程式碼區塊與表格
+           ========================================================================== */
+        code {
+            font-family: Consolas, "Liberation Mono", Courier, monospace;
+            background-color: #f7fafc;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-size: 9.5pt;
+            border: 1px solid #e2e8f0;
+            color: #e53e3e;
+        }
+
+        pre {
+            background-color: #1a202c;
+            color: #f7fafc;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 20px 0;
+            page-break-inside: avoid;
+            border: 1px solid #2d3748;
+        }
+
+        pre code {
+            background-color: transparent;
+            padding: 0;
+            border: none;
+            color: #edf2f7;
+            font-size: 9pt;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 9.5pt;
+            page-break-inside: avoid;
+        }
+
+        th, td {
+            border: 1px solid #cbd5e0;
+            padding: 10px 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #edf2f7;
+            color: #2d3748;
+            font-weight: 700;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f7fafc;
+        }
+
+        /* ==========================================================================
+           8. 圖表與清單
+           ========================================================================== */
+        ol, ul {
+            margin-top: 0;
+            margin-bottom: 16px;
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        /* 檔案樹狀結構 */
+        .directory-tree {
+            font-family: Consolas, monospace;
+            font-size: 9.5pt;
+            line-height: 1.4;
+            background-color: #f7fafc;
+            border: 1px solid #cbd5e0;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+
+        /* 卡片式步驟說明 */
+        .step-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #fcfcfc;
+            page-break-inside: avoid;
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #007acc;
+            color: white;
+            text-align: center;
+            line-height: 24px;
+            font-weight: bold;
+            font-size: 9pt;
+            margin-right: 8px;
+        }
+
+        .step-title {
+            font-weight: bold;
+            color: #1a365d;
+            display: inline-block;
+        }
+
+        .step-content {
+            margin-top: 8px;
+            margin-left: 32px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==========================================================================
+       封面
+       ========================================================================== -->
+    <div class="cover-page">
+        <div class="cover-header">
+            <h1 class="cover-title">自訂工作列群組管理器</h1>
+            <h2 class="cover-subtitle">TaskbarGroups 詳細使用手冊與技術指南</h2>
+        </div>
+        
+        <div class="cover-metadata">
+            <div class="metadata-item">
+                <span class="metadata-label">軟體名稱：</span>TaskbarGroups (CustomTaskbarGroups)
+            </div>
+            <div class="metadata-item">
+                <span class="metadata-label">適用系統：</span>Windows 10 / Windows 11 (64-bit)
+            </div>
+            <div class="metadata-item">
+                <span class="metadata-label">技術架構：</span>.NET Framework 4.0 / C# WinForms
+            </div>
+            <div class="metadata-item">
+                <span class="metadata-label">手冊版本：</span>v1.0.0 (精裝版)
+            </div>
+            <div class="metadata-item">
+                <span class="metadata-label">發佈日期：</span>2026 年 6 月 14 日
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+       目錄
+       ========================================================================== -->
+    <div class="content-container">
+        <div class="toc-title">手冊目錄</div>
+        <ul class="toc-list">
+            <li class="toc-item">
+                <a href="#ch1" class="toc-link">第一章：軟體概述與安裝指南 <span class="toc-page">1</span></a>
+                <ul class="toc-sublist">
+                    <li class="toc-subitem"><a href="#ch1-1" class="toc-sublink">1.1 軟體簡介與設計初衷 <span class="toc-page">1</span></a></li>
+                    <li class="toc-subitem"><a href="#ch1-2" class="toc-sublink">1.2 系統需求與編譯部署 <span class="toc-page">1</span></a></li>
+                    <li class="toc-subitem"><a href="#ch1-3" class="toc-sublink">1.3 目錄與檔案結構說明 <span class="toc-page">2</span></a></li>
+                </ul>
+            </li>
+            <li class="toc-item">
+                <a href="#ch2" class="toc-link">第二章：管理器模式操作手冊 (Manager Mode) <span class="toc-page">3</span></a>
+                <ul class="toc-sublist">
+                    <li class="toc-subitem"><a href="#ch2-1" class="toc-sublink">2.1 啟動管理器介面 <span class="toc-page">3</span></a></li>
+                    <li class="toc-subitem"><a href="#ch2-2" class="toc-sublink">2.2 新增與刪除應用程式群組 <span class="toc-page">3</span></a></li>
+                    <li class="toc-subitem"><a href="#ch2-3" class="toc-sublink">2.3 新增應用程式與參數設定 <span class="toc-page">3</span></a></li>
+                    <li class="toc-subitem"><a href="#ch2-4" class="toc-sublink">2.4 設定群組圖示與排序調整 <span class="toc-page">4</span></a></li>
+                    <li class="toc-subitem"><a href="#ch2-5" class="toc-sublink">2.5 儲存與產生捷徑 <span class="toc-page">4</span></a></li>
+                    <li class="toc-subitem"><a href="#ch2-6" class="toc-sublink">2.6 全域快捷鍵設定與捕獲 <span class="toc-page">4</span></a></li>
+                </ul>
+            </li>
+            <li class="toc-item">
+                <a href="#ch3" class="toc-link">第三章：啟動器模式與工作列釘選 (Launcher Mode) <span class="toc-page">5</span></a>
+                <ul class="toc-sublist">
+                    <li class="toc-subitem"><a href="#ch3-1" class="toc-sublink">3.1 將群組捷徑釘選至工作列 <span class="toc-page">5</span></a></li>
+                    <li class="toc-subitem"><a href="#ch3-2" class="toc-sublink">3.2 彈出式浮動選單操作 <span class="toc-page">5</span></a></li>
+                    <li class="toc-subitem"><a href="#ch3-3" class="toc-sublink">3.3 智慧位置定位算法剖析 <span class="toc-page">6</span></a></li>
+                    <li class="toc-subitem"><a href="#ch3-4" class="toc-sublink">3.4 側邊分頁快速切換 <span class="toc-page">6</span></a></li>
+                    <li class="toc-subitem"><a href="#ch3-5" class="toc-sublink">3.5 系統匣常駐與背景監聽 <span class="toc-page">6</span></a></li>
+                </ul>
+            </li>
+            <li class="toc-item">
+                <a href="#ch4" class="toc-link">第四章：架構設計與底層原理剖析 <span class="toc-page">7</span></a>
+                <ul class="toc-sublist">
+                    <li class="toc-subitem"><a href="#ch4-1" class="toc-sublink">4.1 雙模式執行機制 <span class="toc-page">7</span></a></li>
+                    <li class="toc-subitem"><a href="#ch4-2" class="toc-sublink">4.2 設定檔儲存格式 (CFG) <span class="toc-page">7</span></a></li>
+                    <li class="toc-subitem"><a href="#ch4-3" class="toc-sublink">4.3 免依賴捷徑反射生成法 <span class="toc-page">8</span></a></li>
+                </ul>
+            </li>
+            <li class="toc-item">
+                <a href="#ch5" class="toc-link">第五章：常見問題與排錯指南 (FAQ) <span class="toc-page">9</span></a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- ==========================================================================
+       第一章
+       ========================================================================== -->
+    <div class="page-break content-container">
+        <h1 id="ch1" class="first-h1">第一章：軟體概述與安裝指南</h1>
+        
+        <h2 id="ch1-1">1.1 軟體簡介與設計初衷</h2>
+        <p>
+            在日常的 Windows 系統使用中，我們經常會需要開啟許多不同的應用程式、開發工具或腳本。如果將它們全部釘選在 Windows 工作列上，將會佔用寶貴的螢幕空間，使工作列變得擁擠不堪；如果放在桌面上，又會被開啟的視窗遮擋，降低使用效率。
+        </p>
+        <p>
+            <b>自訂工作列群組管理器 (TaskbarGroups)</b> 是一個專為解決此痛點而設計的輕量級開源工具。它能讓您將多個相關的應用程式歸納至同一個「群組」中。例如，您可以建立一個名為「開發工具」的群組，內含 Visual Studio、VS Code、Git Bash 和 SQL Server Management Studio；再建立一個「辦公軟體」群組，內含 Word、Excel 與 PowerPoint。
+        </p>
+        <p>
+            本工具將這些群組封裝為單個 Windows 捷徑。將其釘選到工作列後，只需點擊一下，便會於工作列上方（或依據工作列的位置）彈出一個美觀的暗色半透明圓角浮動選單，點選其中的應用程式即可快速啟動。它不僅極大化地節省了螢幕空間，更為您的視窗桌面整理帶來了極高的便利性與美感。
+        </p>
+
+        <div class="alert-box alert-info">
+            <div class="alert-title">核心設計理念</div>
+            <ul>
+                <li><b>無依賴性：</b> 完全採用 Windows 原生 API 與 .NET Framework 核心庫，無需安裝額外的執行環境或第三方 DLL。</li>
+                <li><b>極簡輕量：</b> 編譯後主程式小於 30 KB，運行期間幾乎不佔用任何系統 CPU 或記憶體資源。</li>
+                <li><b>原生美感：</b> 提供精心設計的 Windows 暗色風格懸停與過渡動畫，適配 Windows 的現代 UI 美學。</li>
+            </ul>
+        </div>
+
+        <h2 id="ch1-2">1.2 系統需求與編譯部署</h2>
+        <p>
+            本工具基於 C# 與 .NET Framework 4.0 編寫，因此與絕大多數 Windows 系統相容。
+        </p>
+        <h3>系統環境要求</h3>
+        <ul>
+            <li>作業系統：Windows 10 / Windows 11 (64位元版本最佳)</li>
+            <li>軟體框架：.NET Framework 4.0 或更高版本 (Windows 10/11 系統已預裝)</li>
+            <li>系統權限：建議使用標準使用者或系統管理員權限運行</li>
+        </ul>
+
+        <h3>原始碼編譯指南</h3>
+        <p>
+            工作區中已貼心地為您配置好了編譯批次檔 <code>compile.bat</code>。您無需安裝龐大的 Microsoft Visual Studio，即可直接利用系統內建的 .NET 編譯器將原始碼編譯為可執行檔。
+        </p>
+        <div class="step-card">
+            <span class="step-number">1</span>
+            <span class="step-title">檢查環境與編譯路徑</span>
+            <div class="step-content">
+                預設情況下，編譯指令將會調用系統路徑：<br>
+                <code>C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe</code>。請確保此編譯器存在。
+            </div>
+        </div>
+        <div class="step-card">
+            <span class="step-number">2</span>
+            <span class="step-title">執行編譯指令</span>
+            <div class="step-content">
+                雙擊點擊工作區根目錄下的 <code>compile.bat</code>，或者在終端機中執行該批次檔：
+                <pre><code>d:\antigravity\TaskbarGroups&gt; compile.bat</code></pre>
+            </div>
+        </div>
+        <div class="step-card">
+            <span class="step-number">3</span>
+            <span class="step-title">驗證編譯結果</span>
+            <div class="step-content">
+                若編譯成功，終端機將顯示 <code>[SUCCESS] Compilation succeeded! Created TaskbarGroups.exe.</code>，並在根目錄下生成 <code>TaskbarGroups.exe</code> 執行檔。
+            </div>
+        </div>
+
+        <div class="alert-box alert-warning">
+            <div class="alert-title">注意：</div>
+            若執行 <code>compile.bat</code> 時提示 <code>csc.exe not found</code> 錯誤，代表您的系統 .NET Framework 安裝路徑可能與預設路徑不同，或者您正在使用 32 位元的 Windows 系統。此時請編輯 <code>compile.bat</code> 將其編譯路徑修改為 <code>Framework</code>（而非 <code>Framework64</code>）。
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+       第二章
+       ========================================================================== -->
+    <div class="page-break content-container">
+        <h1 id="ch1-3">1.3 目錄與檔案結構說明</h1>
+        <p>
+            本軟體執行時，其相關的所有設定、快取圖示以及捷徑均儲存在使用者的 AppData 目錄下。這樣做的好處是保證了軟體本體的「綠色免安裝性」，且多個系統使用者之間的設定完全獨立。
+        </p>
+        <p>
+            主程式在執行過程中會自動在以下路徑建立檔案夾結構：
+        </p>
+        <pre><code>%USERPROFILE%\AppData\Roaming\CustomTaskbarGroups\</code></pre>
+        
+        <p>詳細的檔案目錄架構說明如下表所示：</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 25%">目錄/檔案路徑</th>
+                    <th style="width: 25%">檔案類型與格式</th>
+                    <th style="width: 50%">功能與用途說明</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>groups\</code></td>
+                    <td>設定檔 (<code>.cfg</code>)</td>
+                    <td>存放各個應用程式群組的設定資料。檔案名稱即為群組名稱。</td>
+                </tr>
+                <tr>
+                    <td><code>shortcuts\</code></td>
+                    <td>捷徑 (<code>.lnk</code>)</td>
+                    <td>存放管理器生成的 Windows 捷徑。這些捷徑是用於釘選到工作列的媒介。</td>
+                </tr>
+                <tr>
+                    <td><code>icons\</code></td>
+                    <td>圖示 (<code>.ico</code> / <code>.png</code>)</td>
+                    <td>
+                        存放從應用程式中自動提取出的圖示 (PNG) 以及群組的專屬圖示 (ICO)。
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>hotkeys.cfg</code></td>
+                    <td>設定檔 (<code>.cfg</code>)</td>
+                    <td>存放全域快捷鍵的配置資訊（格式為：<code>群組名稱|fsModifiers|vkCode|鍵盤文字</code>）。</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="alert-box alert-info">
+            <div class="alert-title">目錄速查提示</div>
+            您可以在「自訂工作列群組管理器」的介面底部點擊 <b>「打開捷徑資料夾」</b> 按鈕，系統將自動開啟 <code>shortcuts\</code> 資料夾，方便您快速存取產生的捷徑。
+        </div>
+
+        <!-- ==========================================================================
+           第二章
+           ========================================================================== -->
+        <h1 id="ch2">第二章：管理器模式操作手冊 (Manager Mode)</h1>
+        
+        <h2 id="ch2-1">2.1 啟動管理器介面</h2>
+        <p>
+            當您直接執行 <code>TaskbarGroups.exe</code>（不帶任何命令行參數啟動）時，軟體會自動偵測並進入 <b>「管理器模式」</b>。
+        </p>
+        <p>
+            管理器介面分為左右兩個大區塊：
+        </p>
+        <ul>
+            <li><b>左側「群組清單」：</b> 顯示所有已建立的群組。您可以在此進行新增群組、選擇群組，或點選刪除群組。</li>
+            <li><b>右側「編輯詳細設定」：</b> 當您點選左側的群組後，右側會自動載入該群組的名稱、圖示以及所包含的應用程式列表，並允許您在此進行細部調整。</li>
+        </ul>
+
+        <h2 id="ch2-2">2.2 新增與刪除應用程式群組</h2>
+        <h3>新增群組</h3>
+        <ol>
+            <li>點擊左下角的 <b>「新增群組」</b> 按鈕。</li>
+            <li>在彈出的對話框中輸入新群組的名稱（例如：<code>設計軟體</code>）。名稱中不能包含 Windows 檔案命名禁用字元（如 <code>\ / : * ? " &lt; &gt; |</code>）。</li>
+            <li>點擊「確定」後，系統會自動在 <code>groups\</code> 目錄下建立對應的設定檔，並在左側清單中載入該群組以供編輯。</li>
+        </ol>
+
+        <h3>刪除群組</h3>
+        <ol>
+            <li>在左側「群組清單」中選取您要刪除的群組.</li>
+            <li>點擊左下角的 <b>「刪除群組」</b> 按鈕。</li>
+            <li>系統會顯示確認對話框。確認後，將會一併刪除該群組的 <code>.cfg</code> 設定檔以及 <code>shortcuts\</code> 中的 Windows 捷徑。</li>
+        </ol>
+    </div>
+
+    <!-- ==========================================================================
+       第三頁
+       ========================================================================== -->
+    <div class="page-break content-container">
+        <h2 id="ch2-3">2.3 新增應用程式與參數設定</h2>
+        <p>
+            選取一個群組後，您可以在右側的應用程式列表欄位中點擊 <b>「新增應用程式」</b> 按鈕。
+        </p>
+        <div class="step-card">
+            <span class="step-number">1</span>
+            <span class="step-title">選擇執行檔</span>
+            <div class="step-content">
+                點擊按鈕後會彈出檔案選擇對話框。請瀏覽您的硬碟並選取目標應用程式的可執行檔（如 <code>.exe</code>、<code>.bat</code>、<code>.cmd</code> 檔案）。
+            </div>
+        </div>
+        <div class="step-card">
+            <span class="step-number">2</span>
+            <span class="step-title">自動提取圖示</span>
+            <div class="step-content">
+                選取檔案後，軟體底層會<b>自動調用 Windows Shell API 提取該 EXE 的關聯圖示</b>，並將其自動轉換為 PNG 格式，儲存於 <code>icons\</code> 目錄下。
+            </div>
+        </div>
+        <div class="step-card">
+            <span class="step-number">3</span>
+            <span class="step-title">編輯參數 (選填)</span>
+            <div class="step-content">
+                如果該程式在啟動時需要附加參數（例如 Chrome 需要附加 <code>--incognito</code> 無痕參數，或者腳本需要特定引數），您可以直接雙擊清單中的「啟動參數」欄位進行鍵入與編輯。
+            </div>
+        </div>
+
+        <h2 id="ch2-4">2.4 設定群組圖示與排序調整</h2>
+        <h3>設定與修改群組圖示</h3>
+        <p>
+            群組圖示是顯示在 Windows 工作列上的圖標。一個美觀、具有識別性的圖示能大幅提升工作效率。
+        </p>
+        <ul>
+            <li><b>預設圖示：</b> 如果您沒有為群組設定圖示，系統會自動生成一個預設的「現代化 2x2 藍色網格圖標」。</li>
+            <li><b>自訂圖示：</b> 點擊右側上方的 <b>「選擇圖示」</b> 按鈕，您可以載入自己的 <code>.ico</code>、<code>.png</code>、<code>.jpg</code> 等格式影像。</li>
+        </ul>
+        <div class="alert-box alert-success">
+            <div class="alert-title">技術貼心設計</div>
+            Windows 捷徑系統限制必須使用 <code>.ico</code> 格式作為捷徑圖示。如果使用者選擇了 PNG 或 JPG 等非 ICO 格式，管理器在儲存時會自動於背景將其轉換為標準的 ICO 圖示，確保能被 Windows 系統正常識別與顯示。
+        </div>
+
+        <h3>調整應用程式順序</h3>
+        <p>
+            彈出浮動選單時，應用程式會依據清單中的上下順序排列。您可以使用清單右側的 <b>「上移」</b> 與 <b>「下移」</b> 按鈕，即時調整各個應用程式在彈出選單中的前後位置。
+        </p>
+
+        <h2 id="ch2-5">2.5 儲存與產生捷徑</h2>
+        <p>
+            編輯完成後，請點擊右下角醒目的藍色按鈕：<b>「儲存並產生工作列捷徑」</b>。軟體將執行以下背景程序：
+        </p>
+        <ol>
+            <li>將當前設定值寫入到 <code>%APPDATA%\CustomTaskbarGroups\groups\[群組名].cfg</code> 設定檔中。</li>
+            <li>如果修改了群組名稱，軟體會自動清理舊的設定檔與捷徑，避免檔案殘留。</li>
+            <li>
+                在 <code>shortcuts\</code> 資料夾下生成一個同名的 Windows 捷徑 (<code>.lnk</code>)。此捷徑的目標指向 <code>TaskbarGroups.exe</code>，並將群組名稱作為參數帶入（如：<code>TargetPath: "...TaskbarGroups.exe" Arguments: "開發工具"</code>）。
+            </li>
+            <li>儲存完畢後，軟體會自動彈出成功提示，並<b>主動為您開啟 shortcuts 捷徑資料夾</b>。</li>
+        </ol>
+
+        <h2 id="ch2-6">2.6 全域快捷鍵設定與捕獲</h2>
+        <p>
+            如果您想用鍵盤快速召喚選單，可以在右側面板設定全域快捷鍵：
+        </p>
+        <ol>
+            <li>選取群組後，點擊右側的 <b>「全域快捷鍵」</b> 輸入框。</li>
+            <li>在鍵盤上按下您的快捷鍵組合（例如 <code>Ctrl + Alt + K</code>），輸入框會自動捕捉並顯示。</li>
+            <li>若要清除該快捷鍵，請在該輸入框中按下 <code>Backspace</code> 或 <code>Delete</code> 鍵，欄位會恢復為「無」。</li>
+            <li>點擊「儲存並產生工作列捷徑」後，該快捷鍵就會即時向 Windows 系統註冊，隨時待命。</li>
+        </ol>
+    </div>
+
+    <!-- ==========================================================================
+       第四頁
+       ========================================================================== -->
+    <div class="page-break content-container">
+        <h1 id="ch3">第三章：啟動器與工作列整合 (Launcher Mode)</h1>
+        
+        <h2 id="ch3-1">3.1 將群組捷徑釘選至工作列</h2>
+        <p>
+            由於 Windows 10/11 的保護限制，普通的捷徑無法直接透過拖曳釘選至工作列，請嚴格按照以下標準步驟進行操作：
+        </p>
+        
+        <div class="step-card">
+            <span class="step-number">1</span>
+            <span class="step-title">開啟捷徑資料夾</span>
+            <div class="step-content">
+                在管理器中點擊「儲存」或點選「打開捷徑資料夾」，系統將會開啟：<br>
+                <code>%APPDATA%\CustomTaskbarGroups\shortcuts</code>。
+            </div>
+        </div>
+        <div class="step-card">
+            <span class="step-number">2</span>
+            <span class="step-title">使用右鍵選單釘選</span>
+            <div class="step-content">
+                對著您剛才建立的群組捷徑（例如 <code>開發工具.lnk</code>）點擊<b>滑鼠右鍵</b>。
+                <ul>
+                    <li><b>Windows 10：</b> 直接點選選單中的 <b>「釘選到工作列」</b>。</li>
+                    <li><b>Windows 11：</b> 點選 <b>「顯示更多選項」</b> &rarr; 點選 <b>「釘選到工作列」</b>。</li>
+                </ul>
+            </div>
+        </div>
+        <div class="step-card">
+            <span class="step-number">3</span>
+            <span class="step-title">拖曳至理想位置</span>
+            <div class="step-content">
+                此時，您自訂的群組圖示便會出現在 Windows 工作列上。您可以按住滑鼠左鍵，將其拖曳移動到您最順手的位置。
+            </div>
+        </div>
+
+        <h2 id="ch3-2">3.2 彈出式浮動選單操作</h2>
+        <p>
+            當您點擊工作列上的群組圖示時，軟體會以參數啟動並進入 <b>「啟動器模式」</b>。此時螢幕上會顯示一個專屬設計的浮動選單：
+        </p>
+        
+        <ul>
+            <li><b>半透明暗黑設計：</b> 選單採用現代 Windows 風格的深色調（RGB: 30, 30, 30），邊角處進行了 12 像素的圓角化（Round Corner）裁切，並附帶精細的硬體陰影效果（Drop Shadow）。</li>
+            <li><b>格線配置：</b> 應用程式以 5 行為最大上限排版。若有 6 個應用程式，將自動排列為 2 行（5 + 1），版面維持整齊對稱。</li>
+            <li><b>極速響應：</b> 點擊選單中的任何應用程式，會立刻在背景啟動該程式，並同時關閉浮動選單。</li>
+            <li><b>無打擾退出：</b> 若您不小心點開了選單但又不想啟動任何程式，只需在選單以外的任何螢幕區域點選滑鼠，或是按下鍵盤的 <code>Escape</code> 鍵，選單便會自動優雅關閉，絕不干擾您的手頭工作。</li>
+        </ul>
+
+        <div class="alert-box alert-info">
+            <div class="alert-title">貼心操作提示</div>
+            本軟體在彈出浮動選單時，<b>不會在 Windows 工作列上顯示 any 視窗圖示</b>，這保證了工作列的視覺乾淨度，讓群組選單看起來完全像是 Windows 原生的系統選單。
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+       第五頁
+       ========================================================================== -->
+    <div class="page-break content-container">
+        <h2 id="ch3-3">3.3 智慧位置定位算法剖析</h2>
+        <p>
+            每位使用者擺放 Windows 工作列的位置與螢幕解析度皆不相同。為了確保浮動選單能完美貼合工作列，且<b>絕對不會超出螢幕邊界</b>，軟體底層設計了一套智慧定位算法。
+        </p>
+        <p>
+            程式啟動時會調用 <code>Screen.FromPoint(Cursor.Position)</code> 取得當前滑鼠所在的螢幕，並獲得該螢幕的「總邊界 (Bounds)」與「工作區 (Working Area，即扣除工作列後的範圍)」。
+        </p>
+        
+        <h3>定位邏輯判斷：</h3>
+        <ol>
+            <li>
+                <b>工作列位於螢幕下方：</b><br>
+                判斷條件：<code>WorkingArea.Bottom &lt; Bounds.Bottom</code><br>
+                定位計算：選單的底邊將自動貼齊工作區底端，並向上偏移 8 像素：<code>y = WorkingArea.Bottom - Form.Height - 8</code>。
+            </li>
+            <li>
+                <b>工作列位於螢幕上方：</b><br>
+                判斷條件：<code>WorkingArea.Top &gt; Bounds.Top</code><br>
+                定位計算：選單的頂邊貼齊工作區頂端，並向下偏移 8 像素：<code>y = WorkingArea.Top + 8</code>。
+            </li>
+            <li>
+                <b>工作列位於螢幕左方：</b><br>
+                判斷條件：<code>WorkingArea.Left &gt; Bounds.Left</code><br>
+                定位計算：選單的左邊貼齊工作區左端，並向右偏移 8 像素：<code>x = WorkingArea.Left + 8</code>。
+            </li>
+            <li>
+                <b>工作列位於螢幕右方：</b><br>
+                判斷條件：<code>WorkingArea.Right &lt; Bounds.Right</code><br>
+                定位計算：選單的右邊貼齊工作區右端，並向左偏移 8 像素：<code>x = WorkingArea.Right - Form.Width - 8</code>。
+            </li>
+        </ol>
+
+        <p>
+            計算完成後，系統會執行一道保護檢測，強制限制 <code>x</code> 與 <code>y</code> 坐標必須落在 <code>WorkingArea</code> 之內，從而徹底避免了在多螢幕或特殊解析度下選單被切掉的問題。
+        </p>
+
+        <h2 id="ch3-4">3.4 側邊分頁快速切換</h2>
+        <p>
+            當您的系統中存在 2 個或以上的群組時，彈出的浮動選單左側會自動載入一個<b>動態分頁側邊欄</b>：
+        </p>
+        <ul>
+            <li><b>群組無縫切換：</b> 側邊欄會以高質感的圓角主題色字首圖示列出所有已建立的群組。您只需將滑鼠移至側邊欄並點選，即可動態將該選單切換至該群組。</li>
+            <li><b>視窗大小自適應：</b> 點擊切換群組時，選單視窗的高度、寬度以及 GDI 圓角範圍會依照新群組的內容即時動態重新計算，配合淡入動畫，切換流暢、完全不拖泥帶水。</li>
+        </ul>
+
+        <h2 id="ch3-5">3.5 系統匣常駐與背景監聽</h2>
+        <p>
+            為了實現全域快捷鍵的「毫秒級」無感響應，管理器提供了<b>系統匣（System Tray / NotifyIcon）常駐執行模式</b>：
+        </p>
+        <ul>
+            <li><b>背景執行：</b> 當點選群組管理器右上角的 <code>X</code> 關閉時，視窗會自動隱藏並退入系統右下角系統匣常駐執行。此時，全域快捷鍵召喚機制會保持高度活躍。</li>
+            <li><b>系統匣選單：</b> 滑鼠右鍵點擊系統匣小圖示，會彈出「開啟管理器」與「徹底退出」選項。選擇「徹底退出」時，程式會釋放所有全域快捷鍵並徹底關閉進程。</li>
+        </ul>
+    </div>
+
+    <!-- ==========================================================================
+       第四章
+       ========================================================================== -->
+    <div class="page-break content-container">
+        <h1 id="ch4">第四章：架構設計與底層原理剖析</h1>
+        
+        <h2 id="ch4-1">4.1 雙模式執行機制</h2>
+        <p>
+            本軟體精妙地將「管理器 (Manager)」與「啟動器 (Launcher)」整合於單一的 C# 檔案與 <code>TaskbarGroups.exe</code> 中。在 <code>Main</code> 進入點中，透過判斷命令行參數 <code>args</code> 的長度來切換運作模式：
+        </p>
+        
+        <pre><code class="language-csharp">[STAThread]
+static void Main(string[] args)
+{
+    Application.EnableVisualStyles();
+    Application.SetCompatibleTextRenderingDefault(false);
+
+    if (args.Length > 0)
+    {
+        // 啟動器模式：傳入了群組名稱參數
+        string groupName = args[0];
+        LauncherForm launcher = new LauncherForm(groupName);
+        if (!launcher.LoadFailed)
+        {
+            Application.Run(launcher);
+        }
+    }
+    else
+    {
+        // 管理器模式：直接雙擊執行
+        Application.Run(new ManagerForm());
+    }
+}</code></pre>
+    </div>
+
+    <!-- ==========================================================================
+       第六頁
+       ========================================================================== -->
+    <div class="page-break content-container">
+        <h2 id="ch4-2">4.2 設定檔儲存格式 (CFG)</h2>
+        <p>
+            設定檔儲存在 <code>groups\</code> 資料夾下，副檔名為 <code>.cfg</code>，編碼為 UTF-8。為了追求效能，軟體沒有引入大型的 XML 或 JSON 函式庫，而是採用了非常高效率的<b>自訂文字行格式</b>。
+        </p>
+        <p>
+            設定檔的結構規則如下：
+        </p>
+        <ul>
+            <li><b>第一行：</b> 群組名稱。</li>
+            <li><b>第二行：</b> 群組專屬圖示的絕對路徑。</li>
+            <li><b>第三行及以後：</b> 該群組所含的應用程式資訊。每一行代表一個應用程式，欄位之間以 <code>|</code> 符號進行分割。</li>
+        </ul>
+
+        <h3>欄位結構：</h3>
+        <pre><code>[程式顯示名稱]|[執行檔絕對路徑]|[啟動引數(選填)]|[圖示檔案路徑(選填)]</code></pre>
+
+        <h3>設定檔範例 (開發工具.cfg)：</h3>
+        <pre><code>開發工具
+C:\Users\USER\AppData\Roaming\CustomTaskbarGroups\icons\開發工具_group.ico
+Visual Studio Code|C:\Users\USER\AppData\Local\Programs\Microsoft VS Code\Code.exe|--locale=zh-tw|C:\Users\USER\AppData\Roaming\CustomTaskbarGroups\icons\Code_a4b2c1d3.png
+Command Prompt|C:\Windows\System32\cmd.exe||C:\Users\USER\AppData\Roaming\CustomTaskbarGroups\icons\cmd_5f6e7d8c.png</code></pre>
+
+        <h2 id="ch4-3">4.3 免依賴捷徑反射生成法</h2>
+        <p>
+            在 Windows 中建立捷徑 (<code>.lnk</code>) 通常需要引用 <code>COM library (Windows Script Host Object Model)</code>。為了避免在編譯時需要綁定額外的 Interop DLL 或造成不同作業系統版本的相容性問題，本軟體使用了<b>「動態反射 (Dynamic Reflection)」</b>技術來調用 Windows 的 COM 元件。
+        </p>
+        <p>
+            以下是底層的實現原始碼，展示了軟體如何優雅地在零相依性的情況下動態調用 <code>WScript.Shell</code>：
+        </p>
+
+        <pre><code class="language-csharp">private void CreateShortcut(string groupName, string iconPath)
+{
+    string shortcutPath = Path.Combine(GroupConfig.GetShortcutsDir(), groupName + ".lnk");
+    string targetExe = Application.ExecutablePath;
+
+    try
+    {
+        // 透過 ProgID 動態取得 WScript.Shell 類型並建立執行個體
+        Type shellType = Type.GetTypeFromProgID("WScript.Shell");
+        object shell = Activator.CreateInstance(shellType);
+        
+        // 反射調用 CreateShortcut 方法
+        object shortcut = shellType.InvokeMember("CreateShortcut", 
+            System.Reflection.BindingFlags.InvokeMethod, null, shell, new object[] { shortcutPath });
+        
+        // 動態反射設定捷徑的各項屬性
+        Type shortcutType = shortcut.GetType();
+        shortcutType.InvokeMember("TargetPath", System.Reflection.BindingFlags.SetProperty, null, shortcut, new object[] { targetExe });
+        shortcutType.InvokeMember("Arguments", System.Reflection.BindingFlags.SetProperty, null, shortcut, new object[] { "\"" + groupName + "\"" });
+        shortcutType.InvokeMember("WorkingDirectory", System.Reflection.BindingFlags.SetProperty, null, shortcut, new object[] { Path.GetDirectoryName(targetExe) });
+        
+        if (!string.IsNullOrEmpty(iconPath) && File.Exists(iconPath))
+        {
+            shortcutType.InvokeMember("IconLocation", System.Reflection.BindingFlags.SetProperty, null, shortcut, new object[] { iconPath });
+        }
+        
+        // 儲存捷徑檔案
+        shortcutType.InvokeMember("Save", System.Reflection.BindingFlags.InvokeMethod, null, shortcut, null);
+    }
+    catch (Exception ex)
+    {
+        throw new Exception("無法建立 Windows 捷徑：" + ex.Message);
+    }
+}</code></pre>
+    </div>
+
+    <!-- ==========================================================================
+       第七頁
+       ========================================================================== -->
+    <div class="page-break content-container">
+        <h1 id="ch5">第五章：常見問題與排錯指南 (FAQ)</h1>
+        
+        <div class="no-break">
+            <h3>Q1：為什麼點擊捷徑後，彈出的視窗一閃而過，或者提示找不到群組設定？</h3>
+            <p>
+                <b>答：</b> 這通常是由於捷徑中的參數被損壞或遺失所致。請確認捷徑的「目標」屬性最後是否帶有以引號包圍的群組名稱作為參數（例如 <code>"開發工具"</code>）。若丟失，最簡單的解決方法是打開管理器 (<code>TaskbarGroups.exe</code>)，選取該群組並重新點擊「儲存並產生工作列捷徑」按鈕來重新生成捷徑。
+            </p>
+        </div>
+
+        <div class="no-break">
+            <h3>Q2：我可以在群組中加入批次檔 (.bat) 或命令提示字元 (.cmd) 嗎？</h3>
+            <p>
+                <b>答：</b> 可以。在新增應用程式時，將檔案選擇器過濾器切換為「所有檔案 (*.*)」即可選擇 <code>.bat</code>、<code>.cmd</code> 或任何其他可執行檔案。但需要特別注意的是，此類腳本檔案可能沒有內嵌圖示，軟體會無法為其自動提取 PNG 圖示，此時系統會自動使用預設的空圖示。
+            </p>
+        </div>
+
+        <div class="no-break">
+            <h3>Q3：為什麼我把群組的捷徑拖曳到工作列上，卻無法釘選？</h3>
+            <p>
+                <b>答：</b> Windows 系統基於安全性考量，不允許使用者直接將自訂的 <code>.lnk</code> 捷徑拖曳到工作列上進行釘選。請一定要<b>對著捷徑點擊滑鼠右鍵，在右鍵選單中點選「釘選到工作列」</b>。
+            </p>
+        </div>
+
+        <div class="no-break">
+            <h3>Q4：當我刪除管理器中的群組時，我加入裡面的應用程式會被刪除嗎？</h3>
+            <p>
+                <b>答：</b> 不會。刪除群組只會刪除您的群組設定檔 (<code>.cfg</code>) 以及捷徑 (<code>.lnk</code>)，這只是刪除了「啟動清單關係」，絕不會對您安裝在電腦中的任何原始應用程式檔案造成影響，請放心使用。
+            </p>
+        </div>
+
+        <div class="no-break">
+            <h3>Q5：如何備份或轉移我的群組設定？</h3>
+            <p>
+                <b>答：</b> 您只需要將 <code>%APPDATA%\CustomTaskbarGroups\</code> 資料夾複製備份即可。移置新電腦時，將此資料夾貼回相同的 AppData 路徑下，並重新編譯執行本程式，即可完美回復您所有的自訂工作列群組。
+            </p>
+        </div>
+
+        <div class="no-break">
+            <div class="alert-box alert-success" style="margin-top: 40px;">
+                <div class="alert-title">結語</div>
+                感謝您使用自訂工作列群組管理器。如果您有任何功能上的建議或遭遇 Bug，歡迎通過調整 C# 原始碼進行擴充。本軟體的高擴充性架構，能讓您輕易地定制出符合您個人喜好的專屬工具！
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
